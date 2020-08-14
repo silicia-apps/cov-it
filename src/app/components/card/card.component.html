@@ -1,0 +1,36 @@
+<ion-card>
+  <fiv-expandable #ex [isOpen]="this.isOpen">
+    <div
+      style="position: relative;"
+      header
+      class="ion-activatable"
+      (click)="this.mode === 'expandable' ? ex.toggle() : null"
+    >
+      <ion-card-header [color]="this.color">
+        <ion-item [color]="this.color" lines="none">  
+          <ion-label class="ion-text-wrap">
+        <ion-card-title>
+            {{ this.title }}
+          </ion-card-title>
+          <ion-card-subtitle>
+            {{ this.subtitle }}
+          </ion-card-subtitle>
+        </ion-label>
+          <div slot="end">
+            <ng-content select="[header]"></ng-content>
+          </div>
+          <fiv-expandable-indicator
+            *ngIf="this.mode === 'expandable'"
+            slot="end"
+            [icon]="this.icon"
+          ></fiv-expandable-indicator>
+        </ion-item>
+      </ion-card-header>
+    </div>
+    <div content>
+      <ion-card-content>
+        <ng-content></ng-content>
+      </ion-card-content>
+    </div>
+  </fiv-expandable>
+</ion-card>

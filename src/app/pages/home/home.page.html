@@ -1,0 +1,407 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      {{'COVIT_TITLE' | translate}}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="this.showBox()">
+        <ion-icon size="large" name="information-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{'COVIT_TITLE' | translate}}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-list>
+    <ion-item (click)="this.showPicker()" detail>
+      <ion-label>{{ 'HOME_AREA' | translate }}</ion-label>
+      {{ (this.lastArea$ | async) || 'HOME_ALL' | translate }}
+    </ion-item>
+    <ion-item detail>
+      <ion-label>
+        {{ 'HOME_DATA_AS_OF' | translate }}
+      </ion-label>
+      <ion-datetime
+        #dataPicker
+        [ngModel]="this.day$ | async"
+        displayFormat="DD/MMM/YYYY"
+        [doneText]="'HOME_DONE' | translate"
+        [cancelText]="'HOME_CANCEL' | translate"
+        [min]="this.minDate"
+        [max]="this.maxDate"
+        (ionChange)="this.updateFilterData(dataPicker.value)"
+      ></ion-datetime>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="(this.last$ | async); else nodata">
+    <app-card
+      color="tertiary"
+      title="{{ (this.last$ | async)?.totale_casi | number }}"
+      [subtitle]="'HOME_TOTAL_CASES' | translate"
+    >
+      <ion-list>
+        <ion-list>
+          <ngx-charts-line-chart
+            [results]="this.historyPositivi"
+            [legend]="true"
+            [legendPosition]="'below'"
+            [scheme]="{ domain: ['#5260ff', '#3dc2ff']}"
+            [view]="[300,300]"
+            [xAxis]="true"
+            [yAxis]="true"
+            schemeType="ordinal"
+            [showGridLines]="true"
+            [roundDomains]="true"
+          >
+          </ngx-charts-line-chart>
+        </ion-list>
+        <ion-item>
+          <ion-label>{{'HOME_SWABS_PERFORMED' | translate}}</ion-label>
+          <ion-text color="tertiary">
+            <h2>{{ (this.last$ | async)?.tamponi | number }}</h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label
+            >{{'HOME_CASES_COMPARED_TO_YESTERDAY'| translate}}</ion-label
+          >
+          <ion-text color="tertiary">
+            <h2>
+              {{ (this.last$ | async)?.totale_casi - (this.prev$ |
+              async)?.totale_casi | number }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_TOTAL_POSITIVES' | translate}}</ion-label>
+          <ion-text color="tertiary"
+            ><h2>
+              {{((this.last$ | async)?.isolamento_domiciliare + (this.last$ |
+              async)?.ricoverati_con_sintomi + (this.last$ |
+              async)?.terapia_intensiva) | number}}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_NO_MORE_POSITIVE' | translate}}</ion-label>
+          <ion-text color="tertiary"
+            ><h2>
+              {{((this.last$ | async)?.dimessi_guariti + (this.last$ |
+              async)?.deceduti) | number}}
+            </h2></ion-text
+          >
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_POSITIVE_VARIATION' | translate}}</ion-label>
+          <ion-text color="tertiary">
+            <h2>
+              {{ ((this.last$ | async)?.isolamento_domiciliare + (this.last$ |
+              async)?.ricoverati_con_sintomi + (this.last$ |
+              async)?.terapia_intensiva) - ((this.prev$ |
+              async)?.isolamento_domiciliare + (this.prev$ |
+              async)?.ricoverati_con_sintomi + (this.prev$ |
+              async)?.terapia_intensiva) | number}}
+            </h2>
+          </ion-text>
+        </ion-item>
+      </ion-list>
+    </app-card>
+    <app-card
+      color="secondary"
+      title="{{ (this.last$ | async)?.isolamento_domiciliare | number }}"
+      [subtitle]="'HOME_IN_HOME_ISOLATION' | translate"
+    >
+      <ion-list>
+        <ion-list>
+          <ngx-charts-line-chart
+            [results]="this.historyDomicilio"
+            [scheme]="{ domain: ['#3dc2ff']}"
+            [view]="[300,300]"
+            [xAxis]="true"
+            [yAxis]="true"
+            schemeType="ordinal"
+            [showGridLines]="true"
+            [roundDomains]="true"
+          >
+          </ngx-charts-line-chart>
+        </ion-list>
+        <ion-item>
+          <ion-label>{{'HOME_COMPARED_TO_YESTERDAY' | translate}}</ion-label>
+          <ion-text color="secondary"
+            ><h2>
+              {{ (this.last$ | async)?.isolamento_domiciliare - (this.prev$ |
+              async)?.isolamento_domiciliare | number }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>perc. su casi totali</ion-label>
+          <ion-text color="secondary"
+            ><h2>
+              {{((this.last$ | async)?.isolamento_domiciliare/(this.last$ |
+              async)?.totale_casi) | percent }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_%_ON_CURRENT_POSITIVI' | translate}}</ion-label>
+          <ion-text color="secondary"
+            ><h2>
+              {{((this.last$ | async)?.isolamento_domiciliare/((this.last$ |
+              async)?.terapia_intensiva + (this.last$ |
+              async)?.ricoverati_con_sintomi + (this.last$ |
+              async)?.isolamento_domiciliare)) | percent }}
+            </h2></ion-text
+          >
+        </ion-item>
+      </ion-list>
+    </app-card>
+    <app-card
+      color="warning"
+      title="{{ (this.last$ | async)?.ricoverati_con_sintomi | number }}"
+      [subtitle]="'HOME_HOSPITALIZED_WITH_SYMPTOMS' | translate"
+    >
+      <ion-list>
+        <ion-list>
+          <ngx-charts-line-chart
+            [results]="this.historyRicoverati"
+            [scheme]="{ domain: ['#ffd534']}"
+            [view]="[300,300]"
+            [xAxis]="true"
+            [yAxis]="true"
+            schemeType="ordinal"
+            [showGridLines]="true"
+            [roundDomains]="true"
+          >
+          </ngx-charts-line-chart>
+        </ion-list>
+        <ion-item>
+          <ion-label>{{'HOME_COMPARED_TO_YESTERDAY' | translate}}</ion-label>
+          <ion-text color="warning"
+            ><h2>
+              {{ (this.last$ | async)?.ricoverati_con_sintomi - (this.prev$ |
+              async)?.ricoverati_con_sintomi | number }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_%_ON_TOTAL_CASES' | translate}}</ion-label>
+          <ion-text color="warning"
+            ><h2>
+              {{((this.last$ | async)?.ricoverati_con_sintomi/(this.last$ |
+              async)?.totale_casi) | percent }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_%_ON_CURRENT_POSITIVI' | translate}}</ion-label>
+          <ion-text color="warning"
+            ><h2>
+              {{((this.last$ | async)?.ricoverati_con_sintomi/((this.last$ |
+              async)?.terapia_intensiva + (this.last$ |
+              async)?.ricoverati_con_sintomi + (this.last$ |
+              async)?.isolamento_domiciliare)) | percent }}
+            </h2></ion-text
+          >
+        </ion-item>
+      </ion-list>
+    </app-card>
+    <app-card
+      color="danger"
+      title=" {{ (this.last$ | async)?.terapia_intensiva | number }}"
+      [subtitle]="'HOME_HOSPITALIZED_IN_INTENSIVE_CARE' | translate"
+    >
+      <ion-list>
+        <ion-list>
+          <ngx-charts-line-chart
+            [results]="this.historyTerapia"
+            [scheme]="{ domain: ['#ff4961']}"
+            [view]="[300,300]"
+            [xAxis]="true"
+            [yAxis]="true"
+            schemeType="ordinal"
+            [showGridLines]="true"
+            [roundDomains]="true"
+          >
+          </ngx-charts-line-chart>
+        </ion-list>
+        <ion-item>
+          <ion-label>{{'HOME_COMPARED_TO_YESTERDAY' | translate}}</ion-label>
+          <ion-text color="danger"
+            ><h2>
+              {{ (this.last$ | async)?.terapia_intensiva - (this.prev$ |
+              async)?.terapia_intensiva | number }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_%_ON_TOTAL_CASES' | translate}}</ion-label>
+          <ion-text color="danger"
+            ><h2>
+              {{((this.last$ | async)?.terapia_intensiva/(this.last$ |
+              async)?.totale_casi) | percent }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_%_ON_CURRENT_POSITIVI' | translate}}</ion-label>
+          <ion-text color="danger"
+            ><h2>
+              {{((this.last$ | async)?.terapia_intensiva/((this.last$ |
+              async)?.terapia_intensiva + (this.last$ |
+              async)?.ricoverati_con_sintomi + (this.last$ |
+              async)?.isolamento_domiciliare)) | percent }}
+            </h2></ion-text
+          >
+        </ion-item>
+      </ion-list>
+    </app-card>
+    <app-card
+      color="success"
+      title="{{ (this.last$ | async)?.dimessi_guariti | number }}"
+      [subtitle]="'HOME_HEALED' | translate"
+    >
+      <ion-list>
+        <ion-list>
+          <ngx-charts-line-chart
+            [results]="this.historyGuariti"
+            [scheme]="{ domain: ['#2fdf75']}"
+            [view]="[300,300]"
+            [xAxis]="true"
+            [yAxis]="true"
+            schemeType="ordinal"
+            [showGridLines]="true"
+            [roundDomains]="true"
+          >
+          </ngx-charts-line-chart>
+        </ion-list>
+        <ion-item>
+          <ion-label>{{'HOME_COMPARED_TO_YESTERDAY' | translate}}</ion-label>
+          <ion-text color="success"
+            ><h2>
+              {{ (this.last$ | async)?.dimessi_guariti - (this.prev$ |
+              async)?.dimessi_guariti | number }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_%_ON_TOTAL_CASES' | translate}}</ion-label>
+          <ion-text color="success"
+            ><h2>
+              {{((this.last$ | async)?.dimessi_guariti/(this.last$ |
+              async)?.totale_casi) | percent }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_%_ON_NO_MORE_POSITIVE' | translate}}</ion-label>
+          <ion-text color="success"
+            ><h2>
+              {{((this.last$ | async)?.dimessi_guariti/((this.last$ |
+              async)?.dimessi_guariti + (this.last$ | async)?.deceduti)) |
+              percent }}
+            </h2></ion-text
+          >
+        </ion-item>
+      </ion-list>
+    </app-card>
+    <app-card
+      color="dark"
+      title=" {{ (this.last$ | async)?.deceduti | number }}"
+      [subtitle]="'HOME_DECEASED' | translate"
+    >
+      <ion-list>
+        <ion-list>
+          <ngx-charts-line-chart
+            [results]="this.historyDeceduti"
+            [view]="[300,300]"
+            [scheme]="{ domain: [this.DarkColor]}"
+            [xAxis]="true"
+            [yAxis]="true"
+            schemeType="ordinal"
+            [showGridLines]="true"
+            [roundDomains]="true"
+          >
+          </ngx-charts-line-chart>
+        </ion-list>
+        <ion-item>
+          <ion-label>{{'HOME_COMPARED_TO_YESTERDAY' | translate}}</ion-label>
+          <ion-text color="dark"
+            ><h2>
+              {{ (this.last$ | async)?.deceduti - (this.prev$ | async)?.deceduti
+              | number }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_%_ON_TOTAL_CASES' | translate}}</ion-label>
+          <ion-text color="dark"
+            ><h2>
+              {{((this.last$ | async)?.deceduti/(this.last$ |
+              async)?.totale_casi) | percent }}
+            </h2>
+          </ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{'HOME_%_ON_NO_MORE_POSITIVE' | translate}}</ion-label>
+          <ion-text color="dark"
+            ><h2>
+              {{((this.last$ | async)?.deceduti/((this.last$ |
+              async)?.dimessi_guariti + (this.last$ | async)?.deceduti)) |
+              percent }}
+            </h2></ion-text
+          >
+        </ion-item>
+      </ion-list>
+    </app-card>
+  </div>
+  <ng-template #nodata>
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>
+          {{ 'HOME_DATA_NOT_AVAIBLE' | translate }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-text *ngIf="this.lastUpdate === (this.day$ | async)"
+          >{{ 'HOME_TODAY_DATA_FROM' | translate }}</ion-text
+        >
+        <p *ngIf="this.lastUpdate !== (this.day$ | async)">
+          {{ 'HOME_NETWORK_ERROR' | translate }}
+        </p>
+        <p
+          *ngIf="this.lastUpdate !== '' && this.lastUpdate !== (this.day$ | async)"
+        >
+          <ion-text
+            >{{ 'HOME_DATA_UPDATED_AT' | translate }} {{
+            this.lastUpdate.substr(8,2) }}/{{ this.lastUpdate.substr(5,2) }}/{{
+            this.lastUpdate.substr(0,4) }}</ion-text
+          >
+        </p>
+      </ion-card-content>
+      <ion-card-header>
+        <ion-button expand="block" (click)="this.loadData()"
+          >{{ 'HOME_RETRY' | translate }}</ion-button
+        >
+        <ion-button
+          *ngIf="this.lastUpdate === (this.day$ | async)"
+          expand="block"
+          (click)="this.updateFilterData(this.prevDay)"
+          >{{ 'HOME_VIEW_YESTERDAY_S_DATA' | translate }}</ion-button
+        >
+        <ion-button
+          *ngIf="this.lastUpdate !== '' && this.lastUpdate !== (this.day$ | async)"
+          expand="block"
+          (click)="this.updateFilterData(this.lastUpdate)"
+          >{{ 'HOME_VIEW_LATEST_DATA' | translate }}</ion-button
+        >
+      </ion-card-header>
+    </ion-card>
+  </ng-template>
+</ion-content>
